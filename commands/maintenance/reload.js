@@ -4,9 +4,11 @@ const path = require('path');
 
 module.exports = {
     cooldown: 3,
+    guildPermission: 'dev',
     data: new SlashCommandBuilder()
         .setName('reload')
         .setDescription('Reloads the targeted command to the REST API')
+        .setDMPermission(true)
         .addStringOption(option =>
             option.setName('command')
                 .setDescription('The command to reload')
@@ -16,27 +18,32 @@ module.exports = {
         const command = interaction.client.commands.get(commandName);
 
         if (!command) {
-            return interaction.reply({content: `No command found with name \`${commandName}\``, ephemeral: true});
+            return interaction.reply({content: `No command found with name \`${commandName}\`.`, ephemeral: true});
         }
 
         // Delete the cached command file when it was required in index.js in order
         // to get the latest version with changes
-        const commandsPath = path.join(__dirname, 'commands');
+        const commandsPath = path.join(__dirname, '../');
         let commandPath;
+        
         const files = fs.readdirSync(commandsPath);
         for (const file of files) {
-            if (fs.lstatSync(file).isDirectory()) {
-                const commands = fs.readdirSync(path.join(commandsPath, file)).filter(file => file.endsWith('.js'));
-                if (`${commandName}.js` in commands) {
-                    console.log('found');
-                    commandPath = path.join(commandsPath, file, `${commandName}.js`);
+            const filePath = path.join(commandsPath, file);
+
+            if (fs.lstatSync(filePath).isDirectory()) {
+                const commandFiles = fs.readdirSync(filePath).filter(file => file.endsWith('.js'));
+                if (commandFiles.includes(`${commandName}.js`)) {
+                    commandPath = path.join(filePath, `${commandName}.js`);
                     break;
                 }
-            } else if (file === `${commandName}.js`) {
-                console.log('found');
-                commandPath = path.join(commandsPath, file, `${commandName}.js`);
+            } else if (file == `${commandName}.js`) {
+                commandPath = path.join(filePath, `${commandName}.js`);
                 break;
             }
+        }
+        
+        if (commandPath == undefined) {
+            return interaction.reply({content: `Could not find \`${commandName}\` in file system.`, ephemeral: true});
         }
 
         delete require.cache[require.resolve(commandPath)];
