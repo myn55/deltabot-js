@@ -35,7 +35,8 @@ module.exports = {
 
             if (now < expirationTime) {
                 const expirationTimestamp = Math.round(expirationTime / 1000);
-                return interaction.reply({content: `You are on cooldown for \`${command.data.name}\`\nYou can use it <t:${expirationTimestamp}:R>`, ephemeral: true});
+                return interaction.reply({content: `You are on cooldown for \`${command.data.name}\`\n
+                You can use it <t:${expirationTimestamp}:R>`, ephemeral: true});
             }
         }
 
@@ -46,8 +47,10 @@ module.exports = {
             await command.execute(interaction);
         } catch (err) {
             if (interaction.replied || interaction.deferred) {
+                console.log(err);
                 await interaction.followUp(`Something wrong happened, ping the man\n\`\`\`${err.message}\`\`\``);
             } else {
+                console.log(err);
                 await interaction.reply(`Something wrong happened, ping the man\n\`\`\`${err.message}\`\`\``);
             }
         }
